@@ -87,7 +87,7 @@
         <httpclient.version>4.5.13</httpclient.version>
         <httpmime.version>4.5.12</httpmime.version>
         <h2.db.version>2.2.220</h2.db.version>
-        <extentreports.version>5.0.9</extentreports.version>
+        <extentreports.version>5.1.1</extentreports.version>
         <version.kafka-clients>3.7.0</version.kafka-clients>
         <version.gson>2.10.1</version.gson>
         <version.univocity-parsers>2.8.2</version.univocity-parsers>
