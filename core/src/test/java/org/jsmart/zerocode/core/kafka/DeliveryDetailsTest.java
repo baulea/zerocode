@@ -1,9 +1,9 @@
 package org.jsmart.zerocode.core.kafka;
 
-import com.google.gson.Gson;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.TopicPartition;
-import org.jsmart.zerocode.core.di.provider.GsonSerDeProvider;
+import org.jsmart.zerocode.core.di.provider.KafkaObjectMapperProvider;
 import org.jsmart.zerocode.core.kafka.delivery.DeliveryDetails;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -15,20 +15,21 @@ import static org.hamcrest.core.Is.is;
 import static org.skyscreamer.jsonassert.JSONCompareMode.LENIENT;
 
 public class DeliveryDetailsTest {
-    // gson used for serialization purpose-only in the main code.
+    // Jackson used for serialization purpose-only in the main code.
     // In the tests it's used for both, ser-deser, but
     // the framework never deserializes the delivery details
     // in reality. Even if so, it works for both as tested below.
-    final Gson gson = new GsonSerDeProvider().get();
+    private final ObjectMapper objectMapper = new KafkaObjectMapperProvider().get();
+
 
     @Test
     public void testSerDeser() throws IOException {
         DeliveryDetails deliveryDetails = new DeliveryDetails("Ok", "test message", 10, null);
 
-        String json = gson.toJson(deliveryDetails);
+        String json = this.objectMapper.writeValueAsString(deliveryDetails);
         assertThat(json, is("{\"status\":\"Ok\",\"message\":\"test message\",\"size\":10}"));
 
-        DeliveryDetails javaPojo = gson.fromJson(json, DeliveryDetails.class);
+        DeliveryDetails javaPojo = this.objectMapper.readValue(json, DeliveryDetails.class);
         assertThat(javaPojo, is(deliveryDetails));
     }
 
@@ -36,17 +37,17 @@ public class DeliveryDetailsTest {
     public void testSerDeser_statusOnly() throws IOException {
         DeliveryDetails deliveryDetails = new DeliveryDetails("Ok", null, null, null);
 
-        String json = gson.toJson(deliveryDetails);
+        String json = this.objectMapper.writeValueAsString(deliveryDetails);
         assertThat(json, is("{\"status\":\"Ok\"}"));
 
-        DeliveryDetails javaPojo = gson.fromJson(json, DeliveryDetails.class);
+        DeliveryDetails javaPojo = this.objectMapper.readValue(json, DeliveryDetails.class);
         assertThat(javaPojo, is(deliveryDetails));
     }
 
     @Test
-    public void testSerViaGson() {
+    public void testSerViaJackson() throws IOException {
         DeliveryDetails deliveryDetails = new DeliveryDetails("Ok", null, null, null);
-        String jsonMsg = gson.toJson(deliveryDetails);
+        String jsonMsg = this.objectMapper.writeValueAsString(deliveryDetails);
         assertThat(jsonMsg, is("{\"status\":\"Ok\"}"));
 
         TopicPartition topicPartition = new TopicPartition("test-topic", 0);
@@ -54,11 +55,10 @@ public class DeliveryDetailsTest {
                 0,
                 2,
                 1546008192846L,
-                100L,
                 1,
                 45);
         deliveryDetails = new DeliveryDetails("Ok", null, null, recordMetadata);
-        jsonMsg = gson.toJson(deliveryDetails);
+        jsonMsg = this.objectMapper.writeValueAsString(deliveryDetails);
 
         JSONAssert.assertEquals("{\n" +
                         "    \"status\": \"Ok\",\n" +

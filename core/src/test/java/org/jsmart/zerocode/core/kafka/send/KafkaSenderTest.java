@@ -1,30 +1,30 @@
 package org.jsmart.zerocode.core.kafka.send;
 
-import com.google.gson.Gson;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.jsmart.zerocode.core.di.provider.KafkaObjectMapperProvider;
+import org.jsmart.zerocode.core.kafka.send.message.ProducerRawRecords;
+import org.junit.Test;
+
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.jsmart.zerocode.core.di.provider.GsonSerDeProvider;
-import org.jsmart.zerocode.core.kafka.send.message.ProducerRawRecords;
-import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class KafkaSenderTest {
-    private final Gson gson = new GsonSerDeProvider().get();
+    private final ObjectMapper objectMapper = new KafkaObjectMapperProvider().get();
 
 
     @Test
-    public void testReadLineByLine() throws FileNotFoundException {
+    public void testReadLineByLine() {
         List<String> lines = new ArrayList<>();
 
-        File file = new File(getClass().getClassLoader().getResource("integration_test_files/kafka_pfiles/unit_test_data_raw.json").getFile());
+        File file = new File(this.getClass().getClassLoader().getResource("integration_test_files/kafka_pfiles/unit_test_data_raw.json").getFile());
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             //while ((line = br.readLine()) != null) {
@@ -42,16 +42,16 @@ public class KafkaSenderTest {
     }
 
     @Test
-    public void testReadLineByLine_deser() throws FileNotFoundException {
+    public void testReadLineByLine_deser() {
 
         ProducerRawRecords producerRawRecords = new ProducerRawRecords(null, null, null, "hello/test_file_raw_recs.txt");
 
-        File file = new File(getClass().getClassLoader().getResource("integration_test_files/kafka_pfiles/unit_test_data_raw.json").getFile());
+        File file = new File(this.getClass().getClassLoader().getResource("integration_test_files/kafka_pfiles/unit_test_data_raw.json").getFile());
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             for(int i = 0; (line = br.readLine()) != null; i++) {
                 System.out.println("line Number : " + i + ": " + line);
-                ProducerRecord record = gson.fromJson(line, ProducerRecord.class);
+                ProducerRecord record = this.objectMapper.readValue(line, ProducerRecord.class);
                 producerRawRecords.getRecords().add(record);
             }
         } catch (IOException e) {

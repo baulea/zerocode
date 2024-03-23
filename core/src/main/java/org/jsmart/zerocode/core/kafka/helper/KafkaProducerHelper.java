@@ -2,7 +2,6 @@ package org.jsmart.zerocode.core.kafka.helper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
-import com.google.gson.Gson;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
@@ -12,7 +11,6 @@ import com.jayway.jsonpath.PathNotFoundException;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.jsmart.zerocode.core.di.provider.GsonSerDeProvider;
 import org.jsmart.zerocode.core.di.provider.ObjectMapperProvider;
 import org.jsmart.zerocode.core.kafka.KafkaConstants;
 import org.jsmart.zerocode.core.kafka.send.message.ProducerJsonRecord;
@@ -33,7 +31,7 @@ import static org.jsmart.zerocode.core.kafka.error.KafkaMessageConstants.NO_RECO
 
 public class KafkaProducerHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaProducerHelper.class);
-    private static final Gson gson = new GsonSerDeProvider().get();
+ 
     private static final ObjectMapper objectMapper = new ObjectMapperProvider().get();
 
     public static Producer<Long, String> createProducer(String bootStrapServers, String producerPropertyFile) {

@@ -40,6 +40,10 @@
 			<artifactId>kafka-avro-serializer</artifactId>
 			<version>5.1.0</version>
 		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>

@@ -6,7 +6,7 @@
             "url": "kafka-topic:demo-raw1",
             "operation": "load",
             "request": {
-                "record Type" : "RAW",
+                "recordType" : "RAW",
                 "records": [
                     {
                         "key": "${RANDOM.NUMBER}",

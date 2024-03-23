@@ -2,10 +2,7 @@ package org.jsmart.zerocode.core.di.main;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
-import java.util.Properties;
-import java.util.logging.Logger;
 import org.jsmart.zerocode.core.di.module.CsvParserModule;
-import org.jsmart.zerocode.core.di.module.GsonModule;
 import org.jsmart.zerocode.core.di.module.HttpClientModule;
 import org.jsmart.zerocode.core.di.module.ObjectMapperModule;
 import org.jsmart.zerocode.core.di.module.PropertiesInjectorModule;
@@ -30,6 +27,9 @@ import org.jsmart.zerocode.core.report.ZeroCodeReportGeneratorImpl;
 import org.jsmart.zerocode.core.runner.ZeroCodeMultiStepsScenarioRunner;
 import org.jsmart.zerocode.core.runner.ZeroCodeMultiStepsScenarioRunnerImpl;
 
+import java.util.Properties;
+import java.util.logging.Logger;
+
 import static org.jsmart.zerocode.core.utils.PropertiesProviderUtils.checkAndLoadOldProperties;
 import static org.jsmart.zerocode.core.utils.PropertiesProviderUtils.loadAbsoluteProperties;
 import static org.jsmart.zerocode.core.utils.SmartUtils.isValidAbsolutePath;
@@ -50,7 +50,6 @@ public class ApplicationMainModule extends AbstractModule {
          */
         install(new ObjectMapperModule());
         install(new HttpClientModule());
-        install(new GsonModule());
         install(new PropertiesInjectorModule(serverEnv));
         install(new CsvParserModule());
         //install(new KafkaModule());

@@ -44,10 +44,6 @@
                     <artifactId>json</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>com.google.code.gson</groupId>
-                    <artifactId>gson</artifactId>
-                </exclusion>
-                <exclusion>
                     <groupId>commons-io</groupId>
                     <artifactId>commons-io</artifactId>
                 </exclusion>
@@ -62,10 +58,6 @@
                 <exclusion>
                     <groupId>org.apache.kafka</groupId>
                     <artifactId>kafka-clients</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.google.code.gson</groupId>
-                    <artifactId>gson</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>com.google.classpath-explorer</groupId>

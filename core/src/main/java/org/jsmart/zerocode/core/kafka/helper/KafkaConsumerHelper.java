@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
-import com.google.gson.Gson;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
@@ -20,7 +19,7 @@ import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
-import org.jsmart.zerocode.core.di.provider.GsonSerDeProvider;
+import org.jsmart.zerocode.core.di.provider.KafkaObjectMapperProvider;
 import org.jsmart.zerocode.core.di.provider.ObjectMapperProvider;
 import org.jsmart.zerocode.core.kafka.KafkaConstants;
 import org.jsmart.zerocode.core.kafka.consume.ConsumerLocalConfigs;
@@ -71,8 +70,8 @@ import static org.jsmart.zerocode.core.utils.SmartUtils.prettyPrintJson;
 public class KafkaConsumerHelper {
     public static final String CONSUMER = "CONSUMER";
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaConsumerHelper.class);
-    private static final Gson gson = new GsonSerDeProvider().get();
-    private static final ObjectMapper objectMapper = new ObjectMapperProvider().get();
+
+    private static final ObjectMapper objectMapper = new KafkaObjectMapperProvider().get();
     public static Map<String, Consumer> consumerCacheByTopicMap = new HashMap<>();
 
     public static Consumer createConsumer(String bootStrapServers, String consumerPropertyFile, String topic, Boolean consumerToBeCached) {
@@ -353,10 +352,10 @@ public class KafkaConsumerHelper {
 
         if (testConfigs != null && !testConfigs.getShowRecordsConsumed()) {
             int size = jsonRecords.size();
-            result = prettyPrintJson(gson.toJson(new ConsumerRawRecords(size == 0 ? rawRecords.size() : size)));
+            result = prettyPrintJson(objectMapper.writeValueAsString(new ConsumerRawRecords(size == 0 ? rawRecords.size() : size)));
 
         } else if (testConfigs != null && RAW.equals(testConfigs.getRecordType())) {
-            result = prettyPrintJson(gson.toJson(new ConsumerRawRecords(rawRecords)));
+            result = prettyPrintJson(objectMapper.writeValueAsString(new ConsumerRawRecords(rawRecords)));
 
         } else if (testConfigs != null && (JSON.equals(testConfigs.getRecordType()) || PROTO.equalsIgnoreCase(testConfigs.getRecordType()) || AVRO.equalsIgnoreCase(testConfigs.getRecordType()))) {
             result = prettyPrintJson(objectMapper.writeValueAsString(new ConsumerJsonRecords(jsonRecords)));

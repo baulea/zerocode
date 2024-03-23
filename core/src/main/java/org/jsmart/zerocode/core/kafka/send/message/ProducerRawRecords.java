@@ -1,5 +1,6 @@
 package org.jsmart.zerocode.core.kafka.send.message;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
 import java.util.ArrayList;
@@ -14,11 +15,19 @@ public class ProducerRawRecords {
     // TODO- see batch for common headers per batch
     // -------------------------------------------------------
     private List<ProducerRecord> records;
-    private final Boolean async;
-    private final String recordType;
-    private final String file;
+    private Boolean async;
+    private String recordType;
+    private String file;
 
-    public ProducerRawRecords(List<ProducerRecord> records, Boolean async, String recordType, String file) {
+    /**
+     * default constructor is needed for Jackson
+     */
+    @JsonCreator
+    public ProducerRawRecords() {
+    }
+
+    public ProducerRawRecords(List<ProducerRecord> records, Boolean async,
+                              String recordType, String file) {
         this.records = ofNullable(records).orElse(new ArrayList<>());
         this.async = async;
         this.recordType = recordType;
@@ -26,32 +35,44 @@ public class ProducerRawRecords {
     }
 
     public List<ProducerRecord> getRecords() {
-        return ofNullable(records).orElse(new ArrayList<>());
+        return ofNullable(this.records).orElse(new ArrayList<>());
     }
 
     public Boolean getAsync() {
-        return async;
+        return this.async;
     }
 
     public String getRecordType() {
-        return recordType;
+        return this.recordType;
     }
 
     public String getFile() {
-        return file;
+        return this.file;
     }
 
     public void setRecords(List<ProducerRecord> records) {
         this.records = records;
     }
 
+    public void setAsync(Boolean async) {
+        this.async = async;
+    }
+
+    public void setRecordType(String recordType) {
+        this.recordType = recordType;
+    }
+
+    public void setFile(String file) {
+        this.file = file;
+    }
+
     @Override
     public String toString() {
         return "ProducerRawRecords{" +
-                "records=" + records +
-                ", async=" + async +
-                ", recordType='" + recordType + '\'' +
-                ", file='" + file + '\'' +
+                "records=" + this.records +
+                ", async=" + this.async +
+                ", recordType='" + this.recordType + '\'' +
+                ", file='" + this.file + '\'' +
                 '}';
     }
 }

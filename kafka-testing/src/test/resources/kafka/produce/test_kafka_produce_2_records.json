@@ -3,7 +3,7 @@
     "steps": [
         {
             "name": "load_kafka",
-            "url": "kafka-topic:demo-p6",
+            "url": "kafka-topic:demo-p7",
             "operation": "load",
             "request": {
                 "records": [
@@ -23,7 +23,7 @@
         },
         {
             "name": "onload_kafka",
-            "url": "kafka-topic:demo-p6",
+            "url": "kafka-topic:demo-p7",
             "operation": "unload",
             "request": {
                 "consumerLocalConfigs": {
@@ -34,12 +34,12 @@
             "assertions": {
                 "records": [
                     {
-                        "topic": "demo-p6",
+                        "topic": "demo-p7",
                         "key": "${$.load_kafka.request.records[0].key}",
                         "value": "Hello World 1"
                     },
                     {
-                        "topic": "demo-p6",
+                        "topic": "demo-p7",
                         "key": "${$.load_kafka.request.records[1].key}",
                         "value": "Hello World 2"
                     }

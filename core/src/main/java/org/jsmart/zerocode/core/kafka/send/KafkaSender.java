@@ -2,7 +2,6 @@ package org.jsmart.zerocode.core.kafka.send;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -10,8 +9,6 @@ import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
-import org.jsmart.zerocode.core.di.provider.GsonSerDeProvider;
-import org.jsmart.zerocode.core.di.provider.ObjectMapperProvider;
 import org.jsmart.zerocode.core.engine.preprocessor.ScenarioExecutionState;
 import org.jsmart.zerocode.core.engine.preprocessor.ZeroCodeAssertionsProcessorImpl;
 import org.jsmart.zerocode.core.kafka.delivery.DeliveryDetails;
@@ -52,32 +49,32 @@ public class KafkaSender {
     @Inject
     private ZeroCodeAssertionsProcessorImpl zeroCodeAssertionsProcessor;
 
-    private final ObjectMapper objectMapper = new ObjectMapperProvider().get();
-    private final Gson gson = new GsonSerDeProvider().get();
+    @Inject
+    @Named("KafkaMapper")
+    private ObjectMapper objectMapper;
+
 
     public String send(String brokers, String topicName, String requestJson, ScenarioExecutionState scenarioExecutionState) throws JsonProcessingException {
-        Producer<?, ?> producer = createProducer(brokers, producerPropertyFile);
+        Producer<?, ?> producer = createProducer(brokers, this.producerPropertyFile);
         String deliveryDetails = null;
 
-        ProducerRawRecords rawRecords;
         String recordType = readRecordType(requestJson, RECORD_TYPE_JSON_PATH);
-
-        ProducerJsonRecords jsonRecords;
 
         try {
             switch (recordType) {
                 case RAW:
-                    rawRecords = gson.fromJson(requestJson, ProducerRawRecords.class);
+                    ProducerRawRecords rawRecords = this.objectMapper.readValue(requestJson, ProducerRawRecords.class);
 
                     String fileName = rawRecords.getFile();
                     if (fileName != null) {
-                        File file = validateAndGetFile(fileName);
+                        File file = this.validateAndGetFile(fileName);
                         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
                             String line;
                             for (int i = 0; (line = br.readLine()) != null; i++) {
-                                ProducerRecord record = gson.fromJson(line, ProducerRecord.class);
+                                ProducerRecord record = this.objectMapper.readValue(line, ProducerRecord.class);
+
                                 LOGGER.debug("From file:'{}', Sending record number: {}\n", fileName, i);
-                                deliveryDetails = sendRaw(topicName, producer, record, rawRecords.getAsync());
+                                deliveryDetails = this.sendRaw(topicName, producer, record, rawRecords.getAsync());
                             }
                         } catch (Throwable ex) {
                             throw new RuntimeException(ex);
@@ -87,33 +84,33 @@ public class KafkaSender {
                         validateProduceRecord(records);
                         for (int i = 0; i < records.size(); i++) {
                             LOGGER.debug("Sending record number: {}\n", i);
-                            deliveryDetails = sendRaw(topicName, producer, records.get(i), rawRecords.getAsync());
+                            deliveryDetails = this.sendRaw(topicName, producer, records.get(i), rawRecords.getAsync());
                         }
                     }
 
                     break;
                 case PROTO:
                 case JSON:
-                    jsonRecords = objectMapper.readValue(requestJson, ProducerJsonRecords.class);
+                    ProducerJsonRecords jsonRecords = this.objectMapper.readValue(requestJson, ProducerJsonRecords.class);
 
                     fileName = jsonRecords.getFile();
                     if (fileName != null) {
-                        File file = validateAndGetFile(fileName);
+                        File file = this.validateAndGetFile(fileName);
                         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
                             String line;
                             for (int i = 0; (line = br.readLine()) != null; i++) {
-                                line = zeroCodeAssertionsProcessor.resolveStringJson(line,
+                                line = this.zeroCodeAssertionsProcessor.resolveStringJson(line,
                                         scenarioExecutionState.getResolvedScenarioState());
-                                ProducerJsonRecord record = objectMapper.readValue(line, ProducerJsonRecord.class);
+                                ProducerJsonRecord record = this.objectMapper.readValue(line, ProducerJsonRecord.class);
                                 LOGGER.debug("From file:'{}', Sending record number: {}\n", fileName, i);
-                                deliveryDetails = sendJson(topicName, producer, record, jsonRecords.getAsync(), recordType, requestJson);
+                                deliveryDetails = this.sendJson(topicName, producer, record, jsonRecords.getAsync(), recordType, requestJson);
                             }
                         }
                     } else {
                         List<ProducerJsonRecord> records = jsonRecords.getRecords();
                         validateProduceRecord(records);
-                        for (int i = 0; i < records.size(); i++) {
-                            deliveryDetails = sendJson(topicName, producer, records.get(i), jsonRecords.getAsync(), recordType, requestJson);
+                        for (ProducerJsonRecord record : records) {
+                            deliveryDetails = this.sendJson(topicName, producer, record, jsonRecords.getAsync(), recordType, requestJson);
                         }
                     }
 
@@ -124,7 +121,7 @@ public class KafkaSender {
 
         } catch (Exception e) {
             LOGGER.error("Error in sending record.", e);
-            String failedStatus = objectMapper.writeValueAsString(new DeliveryDetails(FAILED, e.getMessage()));
+            String failedStatus = this.objectMapper.writeValueAsString(new DeliveryDetails(FAILED, e.getMessage()));
             return prettyPrintJson(failedStatus);
 
         } finally {
@@ -138,7 +135,7 @@ public class KafkaSender {
     private String sendRaw(String topicName,
                            Producer<?, ?> producer,
                            ProducerRecord recordToSend,
-                           Boolean isAsync) throws InterruptedException, ExecutionException {
+                           Boolean isAsync) throws InterruptedException, ExecutionException, JsonProcessingException {
         ProducerRecord qualifiedRecord = prepareRecordToSend(topicName, recordToSend);
 
         RecordMetadata metadata;
@@ -156,7 +153,8 @@ public class KafkaSender {
         // Logs deliveryDetails, which shd be good enough for the caller
         // TODO- combine deliveryDetails into a list n return (if needed)
         // --------------------------------------------------------------
-        String deliveryDetails = gson.toJson(new DeliveryDetails(OK, metadata));
+        String deliveryDetails = this.objectMapper.writeValueAsString(new DeliveryDetails(OK, metadata));
+
         LOGGER.debug("deliveryDetails- {}", deliveryDetails);
         return deliveryDetails;
     }
@@ -166,7 +164,7 @@ public class KafkaSender {
                             ProducerJsonRecord recordToSend,
                             Boolean isAsync,
                             String recordType,
-                            String requestJson) throws InterruptedException, ExecutionException {
+                            String requestJson) throws InterruptedException, ExecutionException, JsonProcessingException {
         ProducerRecord record = prepareJsonRecordToSend(topicName, recordToSend, recordType, requestJson);
 
         RecordMetadata metadata;
@@ -184,7 +182,8 @@ public class KafkaSender {
         // Logs deliveryDetails, which shd be good enough for the caller
         // TODO- combine deliveryDetails into a list n return (if needed)
         // --------------------------------------------------------------
-        String deliveryDetails = gson.toJson(new DeliveryDetails(OK, metadata));
+        String deliveryDetails = this.objectMapper.writeValueAsString(new DeliveryDetails(OK, metadata));
+
         LOGGER.debug("deliveryDetails- {}", deliveryDetails);
 
         return deliveryDetails;
@@ -193,18 +192,18 @@ public class KafkaSender {
 
     private File validateAndGetFile(String fileName) {
         try {
-            URL resource = getClass().getClassLoader().getResource(fileName);
+            URL resource = this.getClass().getClassLoader().getResource(fileName);
             return new File(resource.getFile());
         } catch (Exception ex) {
             throw new RuntimeException("Error accessing file: `" + fileName + "' - " + ex);
         }
     }
 
-    class ProducerAsyncCallback implements Callback {
+    static class ProducerAsyncCallback implements Callback {
         @Override
         public void onCompletion(RecordMetadata recordMetadata, Exception ex) {
             if (ex != null) {
-                LOGGER.error("Asynchronous Producer failed with exception - {} ", ex);
+                LOGGER.error("Asynchronous Producer failed with exception", ex);
             } else {
                 LOGGER.debug("Asynchronous Producer call was successful");
             }

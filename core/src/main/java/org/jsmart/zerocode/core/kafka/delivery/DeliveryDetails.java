@@ -1,7 +1,7 @@
 package org.jsmart.zerocode.core.kafka.delivery;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 import java.util.Objects;
@@ -11,17 +11,16 @@ public class DeliveryDetails {
 
     private final String message;
 
-    @SerializedName("size")
     private final Integer recordCount;
 
     private final RecordMetadata recordMetadata;
 
     @JsonCreator
     public DeliveryDetails(
-            String status,
-            String message,
-            Integer recordCount,
-            RecordMetadata recordMetadata) {
+            @JsonProperty("status") String status,
+            @JsonProperty("message") String message,
+            @JsonProperty("size") Integer recordCount,
+            @JsonProperty("recordMetadata") RecordMetadata recordMetadata) {
         this.status = status;
         this.message = message;
         this.recordCount = recordCount;
@@ -50,6 +49,7 @@ public class DeliveryDetails {
         return message;
     }
 
+    @JsonProperty("size")
     public Integer getRecordCount() {
         return recordCount;
     }
