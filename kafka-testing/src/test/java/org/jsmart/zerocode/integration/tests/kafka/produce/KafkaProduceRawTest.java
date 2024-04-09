@@ -12,7 +12,7 @@ public class KafkaProduceRawTest {
 
     @Test
     @Scenario("kafka/produce/test_kafka_produce_raw.json")
-    public void testProduce_raw() throws Exception {
+    public void testProduce_raw() {
     }
 
 }

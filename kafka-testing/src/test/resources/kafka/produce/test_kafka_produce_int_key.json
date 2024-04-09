@@ -25,7 +25,6 @@
             "operation": "unload",
             "request": {
                 "consumerLocalConfigs": {
-                    //"recordType" : "JSON",
                     "commitSync": true,
                     "maxNoOfRetryPollsOrTimeouts": 3
                 }
